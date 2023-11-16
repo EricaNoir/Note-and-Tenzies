@@ -12,6 +12,23 @@ export default function App() {
     const currentNote =
         notes.find((note) => note.id === currentNoteId) || notes[0];
 
+    /**
+     * Challenge:
+     * 1. ✅ Add createdAt and updatedAt properties to the notes
+     *    When a note is first created, set the `createdAt` and `updatedAt`
+     *    properties to `Date.now()`. Whenever a note is modified, set the
+     *    `updatedAt` property to `Date.now()`.
+     *
+     * 2. Create a new `sortedNotes` array (doesn't need to be saved
+     *    in state) that orders the items in the array from
+     *    most-recently-updated to least-recently-updated.
+     *    This may require a quick Google search.
+     */
+
+    const sortedNotes = notes?.sort(
+        (note1, note2) => note2.updatedAt - note1.updatedAt
+    );
+
     React.useEffect(() => {
         const unsubscribe = onSnapshot(notesCollection, function (snapshot) {
             // Sync up our local notes array with the snapshot data
@@ -26,13 +43,14 @@ export default function App() {
     }, []);
 
     React.useEffect(() => {
-        if (!currentNoteId)
-            setCurrentNoteId(notes[0]?.id)
-    }, [notes])
+        if (!currentNoteId) setCurrentNoteId(notes[0]?.id);
+    }, [notes]);
 
     async function createNewNote() {
         const newNote = {
             body: "# Type your markdown note's title here",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
         };
         const newNoteRef = await addDoc(notesCollection, newNote);
         setCurrentNoteId(newNoteRef.id);
@@ -40,8 +58,11 @@ export default function App() {
 
     async function updateNote(text) {
         const docRef = doc(db, "notes", currentNoteId);
-        await setDoc(docRef, { body: text }, { merge: true })
-        
+        await setDoc(
+            docRef,
+            { body: text, updatedAt: Date.now() },
+            { merge: true }
+        );
     }
 
     async function deleteNote(noteId) {
