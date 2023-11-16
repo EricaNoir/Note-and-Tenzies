@@ -8,22 +8,10 @@ import { notesCollection, db } from "./Firebase";
 export default function App() {
     const [notes, setNotes] = React.useState([]);
     const [currentNoteId, setCurrentNoteId] = React.useState("");
+    const [tempNoteText, setTempNoteText] = React.useState("");
 
     const currentNote =
         notes.find((note) => note.id === currentNoteId) || notes[0];
-
-    /**
-     * Challenge:
-     * 1. ✅ Add createdAt and updatedAt properties to the notes
-     *    When a note is first created, set the `createdAt` and `updatedAt`
-     *    properties to `Date.now()`. Whenever a note is modified, set the
-     *    `updatedAt` property to `Date.now()`.
-     *
-     * 2. Create a new `sortedNotes` array (doesn't need to be saved
-     *    in state) that orders the items in the array from
-     *    most-recently-updated to least-recently-updated.
-     *    This may require a quick Google search.
-     */
 
     const sortedNotes = notes?.sort(
         (note1, note2) => note2.updatedAt - note1.updatedAt
@@ -45,6 +33,19 @@ export default function App() {
     React.useEffect(() => {
         if (!currentNoteId) setCurrentNoteId(notes[0]?.id);
     }, [notes]);
+
+    React.useEffect(() => {
+        if (currentNote) {
+            setTempNoteText(currentNote.body);
+        }
+    }, [currentNote]);
+
+    React.useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            updateNote(tempNoteText);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [tempNoteText]);
 
     async function createNewNote() {
         const newNote = {
@@ -85,7 +86,10 @@ export default function App() {
                         newNote={createNewNote}
                         deleteNote={deleteNote}
                     />
-                    <Editor currentNote={currentNote} updateNote={updateNote} />
+                    <Editor
+                        tempNoteText={tempNoteText}
+                        setTempNoteText={setTempNoteText}
+                    />
                 </Split>
             ) : (
                 <div className="no-notes">
